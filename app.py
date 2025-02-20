@@ -46,8 +46,7 @@ except Exception as e:
     raise
 
 # Configure API client
-
-api_url = os.getenv('ARDUINO_DEVICES_URL')
+api_url = "https://api2.arduino.cc/iot/v2/devices"
 headers = {
     'Authorization': f'Bearer {token.get("access_token")}',
     'Content-Type': 'application/json',
