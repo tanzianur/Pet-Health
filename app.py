@@ -16,8 +16,7 @@ import os
 # Initialize Arduino IoT Cloud client
 # TODO: Replace with actual credentials later (DONE)
 # TODO: Encrypt the credentials with .env file (DONE)
-
-print("Current working directory:", os.getcwd())
+# TODO: Add a function to get the device labels (DONE)
 
 load_dotenv()
 
