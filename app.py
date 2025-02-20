@@ -20,8 +20,8 @@ import csv
 # TODO: Add a function to get the device labels (DONE)
 # TODO: Make token fetching into a function (DONE)
 # TODO: Make client initialization into a function (DONE)
-# TODO: Make the device info fetching into a function (DONE) 
-# Overall refactoring is DONE
+# TODO: Make the device info fetching into a function (DONE)
+# TODO: Make the csv file reading into a function (DONE)
 
 load_dotenv()
 
