@@ -12,6 +12,7 @@ from iot_api_client.configuration import Configuration
 from iot_api_client.api import DevicesV2Api
 import requests
 import os
+import csv
 
 # Initialize Arduino IoT Cloud client
 # TODO: Replace with actual credentials later (DONE)
@@ -23,7 +24,7 @@ load_dotenv()
 # Initialize Arduino IoT Cloud client 
 CLIENT_ID = os.getenv('ARDUINO_CLIENT_ID')
 CLIENT_SECRET = os.getenv('ARDUINO_CLIENT_SECRET')
-TOKEN_URL = os.getenv('ARDUINO_TOKEN_URL', 'https://api2.arduino.cc/iot/v1/clients/token')
+TOKEN_URL = os.getenv('ARDUINO_TOKEN_URL')
 
 # Validate that all required variables are present
 if not all([CLIENT_ID, CLIENT_SECRET, TOKEN_URL]):
@@ -45,7 +46,8 @@ except Exception as e:
     raise
 
 # Configure API client
-api_url = "https://api2.arduino.cc/iot/v2/devices"
+
+api_url = os.getenv('ARDUINO_DEVICES_URL')
 headers = {
     'Authorization': f'Bearer {token.get("access_token")}',
     'Content-Type': 'application/json',
@@ -62,9 +64,40 @@ try:
     if response.status_code == 200:
         devices = response.json()
         device_labels = [device.get('name', '') for device in devices]
+        device_types = [device.get('type', '') for device in devices]
         print("Device Labels:", device_labels)
+        print("Device Types:", device_types)
     else:
         print(f"Error: {response.status_code}")
         print(f"Response: {response.text}")
 except Exception as e:
     print(f"Exception when calling API: {str(e)}")
+
+
+
+def read_csv_data(file_path, delimiter=',', encoding='utf-8', header=0):
+    try:
+        # Read CSV file into a pandas DataFrame
+        df = pd.read_csv(
+            file_path,
+            delimiter=delimiter,
+            encoding=encoding,
+            header=header
+        )
+
+        if df.empty:
+            print(f"Warning: The CSV file {file_path} is empty")
+            return None
+            
+        print(f"Successfully loaded {len(df)} rows from {file_path}")
+        return df
+        
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found")
+        return None
+    except pd.errors.EmptyDataError:
+        print(f"Error: The file {file_path} is empty")
+        return None
+    except Exception as e:
+        print(f"Error reading CSV file: {str(e)}")
+        return None
