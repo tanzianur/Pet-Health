@@ -1,0 +1,32 @@
+### dotenv ###
+.env
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+### venv ###
+# Virtualenv
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+.venv
+venv/
+ENV/
+env/
+pip-selfcheck.json
+
+### IDE specific ###
+.vscode/
+.idea/
+
+### Misc ###
+.DS_Store
+*.log
