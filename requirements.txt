@@ -1,0 +1,9 @@
+streamlit
+arduino-iot-cloud
+pandas
+oauthlib
+requests-oauthlib
+python-dotenv
+iot-api-client
+requests
+swig
