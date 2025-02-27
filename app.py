@@ -1,7 +1,7 @@
 import streamlit as st
 from arduino_iot_cloud import ArduinoCloudClient
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 from dotenv import load_dotenv
@@ -123,8 +123,8 @@ def read_csv_data(file_path, delimiter=',', encoding='utf-8', header=0):
 def get_things_info():
     try:
         token = get_token()
-        base_url, headers = create_api_headers(token)
-        api_url = f"{base_url}/things"  # Build specific endpoint
+        api_url = "https://api2.arduino.cc/iot/v2/things"
+        _, headers = create_api_headers(token)
         
         response = requests.get(api_url, headers=headers)
         if response.status_code == 200:
@@ -132,9 +132,6 @@ def get_things_info():
             things_info = []
             
             for thing in things:
-                if thing.get('name') != 'PetHealth':
-                    continue
-                    
                 thing_info = {
                     'id': thing.get('id', ''),
                     'name': thing.get('name', ''),
@@ -151,8 +148,9 @@ def get_things_info():
                         update_time = prop.get('value_updated_at', '-')
                         if update_time != '-' and update_time:
                             try:
-                                # Format the timestamp to a readable format
                                 dt = datetime.strptime(update_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+                                # Convert from UTC to local time
+                                dt = dt.replace(tzinfo=timezone.utc).astimezone()
                                 update_time = dt.strftime('%m/%d/%Y %I:%M:%S %p')
                                 parts = update_time.split()
                                 date_parts = parts[0].split('/')
