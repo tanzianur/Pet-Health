@@ -50,8 +50,10 @@ def get_token():
 
 # Set up authentication headers
 # api_url is defining the endpoint url (subject to change/add more endpoints)
-def create_api_headers(token):
-    api_url = "https://api2.arduino.cc/iot/v2/devices"
+def create_api_headers(token, api_url=None):
+    if api_url is None:
+        api_url = "https://api2.arduino.cc/iot/v2"
+        
     headers = {
         'Authorization': f'Bearer {token.get("access_token")}',
         'Content-Type': 'application/json',
@@ -63,10 +65,10 @@ def create_api_headers(token):
 
 # Function to get the device info from the API
 def get_device_info():
-    # Get the devices from the API
     try:
         token = get_token()
-        api_url, headers = create_api_headers(token)
+        base_url, headers = create_api_headers(token)
+        api_url = f"{base_url}/devices"  # Build specific endpoint
         
         # First make OPTIONS request
         options_response = requests.options(api_url, headers=headers)
@@ -121,8 +123,8 @@ def read_csv_data(file_path, delimiter=',', encoding='utf-8', header=0):
 def get_things_info():
     try:
         token = get_token()
-        api_url = "https://api2.arduino.cc/iot/v2/things"
-        _, headers = create_api_headers(token)
+        base_url, headers = create_api_headers(token)
+        api_url = f"{base_url}/things"  # Build specific endpoint
         
         response = requests.get(api_url, headers=headers)
         if response.status_code == 200:
@@ -201,7 +203,7 @@ def main():
             st.subheader("Pet Details")
             st.write(f"Type: {pet_type}")
             st.write(f"Age: {pet_age} years")
-            st.write(f"Weight: {pet_weight} lbs")
+            st.write(f"Weight: {pet_weight:.2f} lbs")
         
         with col2:
             st.subheader("Activity Monitoring")
