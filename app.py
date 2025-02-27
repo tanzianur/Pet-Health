@@ -117,38 +117,7 @@ def read_csv_data(file_path, delimiter=',', encoding='utf-8', header=0):
         return None
     
 
-def main():
-    print("Fetching Arduino IoT Cloud device information...")
-    device_labels, device_types = get_device_info()
-
-    things_info = get_things_info()
-
-    if device_labels and device_types:
-        print("\nDevice Summary:")
-        print("-" * 50)
-        for i, (label, type_) in enumerate(zip(device_labels, device_types), 1):
-            print(f"Device {i}:")
-            print(f" Name: {label}")
-            print(f" Type: {type_}")
-            print("-" * 50)
-    else:
-        print("Failed to fetch device information. Please check your credentials.")
-    
-    if things_info:
-        print("\nThings Summary:")
-        print("-" * 50)
-        for thing in things_info:
-            print(f"Thing: {thing['name']} (ID: {thing['id']})")
-            print("Variables:")
-            for var in thing['variables']:
-                value_str = f"Current: {var['value']}" if var['value'] != 'N/A' else "No value yet"
-                print(f" - {var['name']} ({var['type']}) - {value_str}")
-                print(f"   Last Update: {var['update_time']}")
-            print("-" * 50)
-    else:
-        print("Failed to fetch things information. Please check your credentials.")
-
-
+# Function to get variables from Thing endpoint
 def get_things_info():
     try:
         token = get_token()
@@ -211,6 +180,75 @@ def get_things_info():
     except Exception as e:
         print(f"Exception when calling API: {str(e)}")
         return None
+
+
+def main():
+    st.title("Pet Health Monitoring System")
+    
+    # Sidebar for pet information input
+    st.sidebar.header("Pet Information")
+    pet_type = st.sidebar.selectbox("Pet Type", ["Dog", "Cat"])
+    pet_name = st.sidebar.text_input("Pet Name")
+    pet_age = st.sidebar.number_input("Pet Age (years)", min_value=0, max_value=30)
+    pet_weight = st.sidebar.number_input("Pet Weight (lbs)", min_value=0.0, max_value=100.0)
+
+    # display pet info
+    if pet_name:
+        st.header(f"{pet_name}'s Health Dashboard")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Pet Details")
+            st.write(f"Type: {pet_type}")
+            st.write(f"Age: {pet_age} years")
+            st.write(f"Weight: {pet_weight} lbs")
+        
+        with col2:
+            st.subheader("Activity Monitoring")
+            things_info = get_things_info()
+            
+            if things_info:
+                for thing in things_info:
+                    for variable in thing['variables']:
+                        if variable['name'].lower() == 'stepcount':
+                            st.metric(
+                                label="Steps Today",
+                                value=variable['value'] if variable['value'] != 'N/A' else '0',
+                                delta=None
+                            )
+                            st.caption(f"Last updated: {variable['update_time']}")
+            else:
+                st.warning("No step count data available")
+
+    print("Fetching Arduino IoT Cloud device information...")
+    device_labels, device_types = get_device_info()
+    things_info = get_things_info()
+
+    if device_labels and device_types:
+        print("\nDevice Summary:")
+        print("-" * 50)
+        for i, (label, type_) in enumerate(zip(device_labels, device_types), 1):
+            print(f"Device {i}:")
+            print(f" Name: {label}")
+            print(f" Type: {type_}")
+            print("-" * 50)
+    else:
+        print("Failed to fetch device information. Please check your credentials.")
+    
+    if things_info:
+        print("\nThings Summary:")
+        print("-" * 50)
+        for thing in things_info:
+            print(f"Thing: {thing['name']} (ID: {thing['id']})")
+            print("Variables:")
+            for var in thing['variables']:
+                value_str = f"Current: {var['value']}" if var['value'] != 'N/A' else "No value yet"
+                print(f" - {var['name']} ({var['type']}) - {value_str}")
+                print(f"   Last Update: {var['update_time']}")
+            print("-" * 50)
+    else:
+        print("Failed to fetch things information. Please check your credentials.")
+
 
 
 if __name__ == "__main__":

@@ -30,3 +30,5 @@ pip-selfcheck.json
 ### Misc ###
 .DS_Store
 *.log
+
+.gitconfig
