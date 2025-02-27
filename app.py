@@ -13,15 +13,8 @@ from iot_api_client.api import DevicesV2Api
 import requests
 import os
 import csv
+import json
 
-
-# TODO: Replace with actual credentials later (DONE)
-# TODO: Encrypt the credentials with .env file (DONE)
-# TODO: Add a function to get the device labels (DONE)
-# TODO: Make token fetching into a function (DONE)
-# TODO: Make client initialization into a function (DONE)
-# TODO: Make the device info fetching into a function (DONE)
-# TODO: Make the csv file reading into a function (DONE)
 
 load_dotenv()
 
@@ -93,7 +86,7 @@ def get_device_info():
     except Exception as e:
         print(f"Exception when calling API: {str(e)}")
         return None, None
-        
+
 
 # Function to read a csv file (may be used for the data from the devices)
 def read_csv_data(file_path, delimiter=',', encoding='utf-8', header=0):
@@ -128,6 +121,8 @@ def main():
     print("Fetching Arduino IoT Cloud device information...")
     device_labels, device_types = get_device_info()
 
+    things_info = get_things_info()
+
     if device_labels and device_types:
         print("\nDevice Summary:")
         print("-" * 50)
@@ -138,6 +133,85 @@ def main():
             print("-" * 50)
     else:
         print("Failed to fetch device information. Please check your credentials.")
+    
+    if things_info:
+        print("\nThings Summary:")
+        print("-" * 50)
+        for thing in things_info:
+            print(f"Thing: {thing['name']} (ID: {thing['id']})")
+            print("Variables:")
+            for var in thing['variables']:
+                value_str = f"Current: {var['value']}" if var['value'] != 'N/A' else "No value yet"
+                print(f" - {var['name']} ({var['type']}) - {value_str}")
+                print(f"   Last Update: {var['update_time']}")
+            print("-" * 50)
+    else:
+        print("Failed to fetch things information. Please check your credentials.")
+
+
+def get_things_info():
+    try:
+        token = get_token()
+        api_url = "https://api2.arduino.cc/iot/v2/things"
+        _, headers = create_api_headers(token)
+        
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            things = response.json()
+            things_info = []
+            
+            for thing in things:
+                if thing.get('name') != 'PetHealth':
+                    continue
+                    
+                thing_info = {
+                    'id': thing.get('id', ''),
+                    'name': thing.get('name', ''),
+                    'variables': []
+                }
+                
+                thing_properties_url = f"{api_url}/{thing['id']}/properties"
+                properties_response = requests.get(thing_properties_url, headers=headers)
+                
+                if properties_response.status_code == 200:
+                    properties = properties_response.json()
+                    
+                    for prop in properties:
+                        update_time = prop.get('value_updated_at', '-')
+                        if update_time != '-' and update_time:
+                            try:
+                                # Format the timestamp to a readable format
+                                dt = datetime.strptime(update_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+                                update_time = dt.strftime('%m/%d/%Y %I:%M:%S %p')
+                                parts = update_time.split()
+                                date_parts = parts[0].split('/')
+                                date_parts = [str(int(p)) for p in date_parts]
+                                time_parts = parts[1].split(':')
+                                time_parts[0] = str(int(time_parts[0]))
+                                update_time = f"{'/'.join(date_parts)} {':'.join(time_parts)} {parts[2]}"
+                            except ValueError:
+                                pass
+                        
+                        thing_info['variables'].append({
+                            'name': prop.get('name', ''),
+                            'type': prop.get('type', ''),
+                            'value': prop.get('last_value', 'N/A'),
+                            'update_time': update_time
+                        })
+                else:
+                    print(f"Failed to get properties for {thing['name']}: {properties_response.status_code}")
+                
+                things_info.append(thing_info)
+            
+            return things_info
+        else:
+            print(f"Error: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        print(f"Exception when calling API: {str(e)}")
+        return None
+
 
 if __name__ == "__main__":
     main()
